@@ -73,6 +73,13 @@ def search_snippets():
     snippets = snippets.order_by(CodeSnippet.created_at.desc()).all()
     return jsonify([snippet.to_dict() for snippet in snippets])
 
+@app.route('/api/snippets/<int:snippet_id>', methods=['DELETE'])
+def delete_snippet(snippet_id):
+    snippet = CodeSnippet.query.get_or_404(snippet_id)
+    db.session.delete(snippet)
+    db.session.commit()
+    return '', 204
+
 @app.route('/api/themes', methods=['GET'])
 def get_themes():
     # Get all available Pygments styles

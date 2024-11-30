@@ -5,6 +5,7 @@ A web application for developers to save, categorize, and search their code snip
 ## Features
 
 - Save code snippets with titles and categories
+- Delete snippets with confirmation
 - Syntax highlighting for multiple programming languages
 - Search snippets by title, content, category, or language
 - Clean and responsive user interface
@@ -67,12 +68,17 @@ python app.py
    - Paste your code
    - Click "Save Snippet"
 
-2. **Searching Snippets**:
+2. **Managing Snippets**:
+   - View all your snippets in chronological order
+   - Delete snippets using the trash icon
+   - Confirm deletion when prompted
+
+3. **Searching Snippets**:
    - Use the search bar to find snippets by title or content
    - Filter by category or language using the dropdown menus
    - Results update in real-time as you type
 
-3. **Customizing Themes**:
+4. **Customizing Themes**:
    - Use the theme selector in the top-right corner
    - Choose from various syntax highlighting themes
    - Changes apply instantly to all code snippets
