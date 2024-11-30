@@ -62,8 +62,8 @@ def search_snippets():
     
     if query:
         snippets = snippets.filter(db.or_(
-            CodeSnippet.title.ilike(f'%{query}%'),
-            CodeSnippet.code.ilike(f'%{query}%')
+            db.func.lower(CodeSnippet.title).like(f'%{query}%'),
+            db.func.lower(CodeSnippet.code).like(f'%{query}%')
         ))
     if category:
         snippets = snippets.filter(CodeSnippet.category == category)

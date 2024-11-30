@@ -303,12 +303,40 @@
                 .then(response => response.json())
                 .then(snippets => {
                     allSnippets = snippets;
+                    
+                    // Update categories dropdown
+                    updateCategoryFilter(snippets);
+                    
                     const snippetsList = document.getElementById('snippetsList');
                     snippetsList.innerHTML = '';
                     snippets.forEach(snippet => {
                         snippetsList.appendChild(createSnippetElement(snippet));
                     });
                 });
+        }
+
+        // Update category filter options
+        function updateCategoryFilter(snippets) {
+            const categories = new Set();
+            snippets.forEach(snippet => {
+                if (snippet.category && snippet.category.trim()) {
+                    categories.add(snippet.category.trim());
+                }
+            });
+
+            const categoryFilter = document.getElementById('categoryFilter');
+            const currentValue = categoryFilter.value;
+            
+            categoryFilter.innerHTML = `
+                <option value="">All Categories</option>
+                ${Array.from(categories)
+                    .sort()
+                    .map(category => `
+                        <option value="${category}" ${category === currentValue ? 'selected' : ''}>
+                            ${category}
+                        </option>
+                    `).join('')}
+            `;
         }
 
         // Initial load
