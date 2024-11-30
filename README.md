@@ -26,6 +26,7 @@ A web application for developers to save, categorize, and search their code snip
 - Go
 - Rust
 - Kotlin
+- Dart
 - SQL
 - Shell Script
 - YAML
