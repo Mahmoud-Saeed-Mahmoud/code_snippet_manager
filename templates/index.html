@@ -17,8 +17,6 @@
             margin: 1em 0;
             white-space: pre-wrap;
             word-wrap: break-word;
-            background-color: #282c34;
-            color: #abb2bf;
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
             font-size: 14px;
             line-height: 1.5;
@@ -44,7 +42,12 @@
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">Code Snippet Manager</h1>
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Code Snippet Manager</h1>
+            <select id="themeSelector" class="p-2 border rounded bg-white shadow-sm">
+                <option value="monokai">Select Theme</option>
+            </select>
+        </div>
         
         <!-- Add Snippet Form -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -125,12 +128,49 @@
     </div>
 
     <script>
+        // Theme Management
+        let currentTheme = 'monokai';
+        let allSnippets = [];
+        
+        // Load available themes
+        fetch('/api/themes')
+            .then(response => response.json())
+            .then(themes => {
+                const themeSelector = document.getElementById('themeSelector');
+                themeSelector.innerHTML = themes.map(theme => 
+                    `<option value="${theme}" ${theme === 'monokai' ? 'selected' : ''}>${
+                        theme.charAt(0).toUpperCase() + theme.slice(1)
+                    }</option>`
+                ).join('');
+            });
+
+        // Theme change handler
+        document.getElementById('themeSelector').addEventListener('change', (e) => {
+            currentTheme = e.target.value;
+            // Refresh all existing snippets with new theme
+            const snippets = document.querySelectorAll('.snippet-container');
+            snippets.forEach(container => {
+                const snippetId = container.getAttribute('data-snippet-id');
+                const snippet = allSnippets.find(s => s.id === parseInt(snippetId));
+                if (snippet) {
+                    highlightCode(snippet.code, snippet.language)
+                        .then(highlightedCode => {
+                            container.innerHTML = highlightedCode;
+                        });
+                }
+            });
+        });
+
         // Utility Functions
         function highlightCode(code, language) {
             return fetch('/api/highlight', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code, language })
+                body: JSON.stringify({ 
+                    code, 
+                    language,
+                    theme: currentTheme
+                })
             })
             .then(response => response.json())
             .then(data => {
@@ -162,6 +202,7 @@
 
             const codeContainer = document.createElement('div');
             codeContainer.className = 'snippet-container mt-4';
+            codeContainer.setAttribute('data-snippet-id', snippet.id);
             
             highlightCode(snippet.code, snippet.language)
                 .then(highlightedCode => {
@@ -171,24 +212,6 @@
             div.appendChild(header);
             div.appendChild(codeContainer);
             return div;
-        }
-
-        // Load and Display Snippets
-        function loadSnippets(searchQuery = '', category = '', language = '') {
-            const params = new URLSearchParams();
-            if (searchQuery) params.append('q', searchQuery);
-            if (category) params.append('category', category);
-            if (language) params.append('language', language);
-
-            fetch(`/api/snippets/search?${params}`)
-                .then(response => response.json())
-                .then(snippets => {
-                    const snippetsList = document.getElementById('snippetsList');
-                    snippetsList.innerHTML = '';
-                    snippets.forEach(snippet => {
-                        snippetsList.appendChild(createSnippetElement(snippet));
-                    });
-                });
         }
 
         // Event Listeners
@@ -230,6 +253,25 @@
                 );
             });
         });
+
+        // Load and Display Snippets
+        function loadSnippets(searchQuery = '', category = '', language = '') {
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('q', searchQuery);
+            if (category) params.append('category', category);
+            if (language) params.append('language', language);
+
+            fetch(`/api/snippets/search?${params}`)
+                .then(response => response.json())
+                .then(snippets => {
+                    allSnippets = snippets;
+                    const snippetsList = document.getElementById('snippetsList');
+                    snippetsList.innerHTML = '';
+                    snippets.forEach(snippet => {
+                        snippetsList.appendChild(createSnippetElement(snippet));
+                    });
+                });
+        }
 
         // Initial load
         loadSnippets();

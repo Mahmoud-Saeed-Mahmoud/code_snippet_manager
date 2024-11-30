@@ -4,6 +4,7 @@ from datetime import datetime
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name
+from pygments.styles import get_all_styles
 import os
 
 app = Flask(__name__)
@@ -72,15 +73,22 @@ def search_snippets():
     snippets = snippets.order_by(CodeSnippet.created_at.desc()).all()
     return jsonify([snippet.to_dict() for snippet in snippets])
 
+@app.route('/api/themes', methods=['GET'])
+def get_themes():
+    # Get all available Pygments styles
+    themes = list(get_all_styles())
+    return jsonify(themes)
+
 @app.route('/api/highlight', methods=['POST'])
 def highlight_code():
     data = request.json
     code = data['code']
     language = data['language']
+    theme = data.get('theme', 'monokai')  # Default to monokai if no theme specified
     
     try:
         lexer = get_lexer_by_name(language, stripall=True)
-        formatter = HtmlFormatter(style='monokai')
+        formatter = HtmlFormatter(style=theme)
         highlighted = highlight(code, lexer, formatter)
         return jsonify({
             'highlighted_code': highlighted,
