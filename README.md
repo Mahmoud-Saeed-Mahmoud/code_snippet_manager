@@ -9,6 +9,14 @@ A web application for developers to save, categorize, and search their code snip
 - Search snippets by title, content, category, or language
 - Clean and responsive user interface
 - Real-time syntax highlighting preview
+- Multiple theme support with instant preview
+  - Includes popular themes like:
+    - Monokai (default)
+    - Solarized (Light/Dark)
+    - GitHub (Light/Dark)
+    - Dracula
+    - Nord
+    - And many more!
 
 ## Supported Languages
 
@@ -63,6 +71,12 @@ python app.py
    - Use the search bar to find snippets by title or content
    - Filter by category or language using the dropdown menus
    - Results update in real-time as you type
+
+3. **Customizing Themes**:
+   - Use the theme selector in the top-right corner
+   - Choose from various syntax highlighting themes
+   - Changes apply instantly to all code snippets
+   - Theme selection persists during your session
 
 ## Technologies Used
 
