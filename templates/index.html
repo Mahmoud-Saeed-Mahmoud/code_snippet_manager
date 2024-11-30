@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Snippet Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style id="highlighting-style"></style>
+    <style>
+        .snippet-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        pre {
+            padding: 1em;
+            border-radius: 0.5em;
+            margin: 1em 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">Code Snippet Manager</h1>
+        
+        <!-- Add Snippet Form -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4">Add New Snippet</h2>
+            <form id="snippetForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" id="title" placeholder="Title" class="w-full p-2 border rounded" required>
+                    <select id="language" class="w-full p-2 border rounded" required>
+                        <option value="">Select Language</option>
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="typescript">TypeScript</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="java">Java</option>
+                        <option value="cpp">C++</option>
+                        <option value="csharp">C#</option>
+                        <option value="php">PHP</option>
+                        <option value="ruby">Ruby</option>
+                        <option value="swift">Swift</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                        <option value="kotlin">Kotlin</option>
+                        <option value="sql">SQL</option>
+                        <option value="shell">Shell Script</option>
+                        <option value="yaml">YAML</option>
+                        <option value="json">JSON</option>
+                        <option value="markdown">Markdown</option>
+                        <option value="xml">XML</option>
+                    </select>
+                    <input type="text" id="category" placeholder="Category" class="w-full p-2 border rounded">
+                </div>
+                <textarea id="code" placeholder="Paste your code here..." class="w-full h-40 p-2 border rounded font-mono" required></textarea>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save Snippet</button>
+            </form>
+        </div>
+
+        <!-- Search Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4">Search Snippets</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="text" id="searchQuery" placeholder="Search..." class="w-full p-2 border rounded">
+                <select id="categoryFilter" class="w-full p-2 border rounded">
+                    <option value="">All Categories</option>
+                </select>
+                <select id="languageFilter" class="w-full p-2 border rounded">
+                    <option value="">All Languages</option>
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="java">Java</option>
+                    <option value="cpp">C++</option>
+                    <option value="csharp">C#</option>
+                    <option value="php">PHP</option>
+                    <option value="ruby">Ruby</option>
+                    <option value="swift">Swift</option>
+                    <option value="go">Go</option>
+                    <option value="rust">Rust</option>
+                    <option value="kotlin">Kotlin</option>
+                    <option value="sql">SQL</option>
+                    <option value="shell">Shell Script</option>
+                    <option value="yaml">YAML</option>
+                    <option value="json">JSON</option>
+                    <option value="markdown">Markdown</option>
+                    <option value="xml">XML</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Snippets List -->
+        <div id="snippetsList" class="space-y-4">
+            <!-- Snippets will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        // Utility Functions
+        function highlightCode(code, language) {
+            return fetch('/api/highlight', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, language })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.css) {
+                    document.getElementById('highlighting-style').textContent = data.css;
+                }
+                return data.highlighted_code;
+            });
+        }
+
+        function createSnippetElement(snippet) {
+            const div = document.createElement('div');
+            div.className = 'bg-white p-6 rounded-lg shadow-md';
+            
+            const header = document.createElement('div');
+            header.className = 'flex justify-between items-center mb-4';
+            header.innerHTML = `
+                <div>
+                    <h3 class="text-xl font-semibold">${snippet.title}</h3>
+                    <p class="text-sm text-gray-600">
+                        Language: ${snippet.language} | 
+                        Category: ${snippet.category || 'Uncategorized'} | 
+                        Created: ${snippet.created_at}
+                    </p>
+                </div>
+            `;
+
+            const codeContainer = document.createElement('div');
+            codeContainer.className = 'snippet-container';
+            
+            highlightCode(snippet.code, snippet.language)
+                .then(highlightedCode => {
+                    codeContainer.innerHTML = highlightedCode;
+                });
+
+            div.appendChild(header);
+            div.appendChild(codeContainer);
+            return div;
+        }
+
+        // Load and Display Snippets
+        function loadSnippets(searchQuery = '', category = '', language = '') {
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('q', searchQuery);
+            if (category) params.append('category', category);
+            if (language) params.append('language', language);
+
+            fetch(`/api/snippets/search?${params}`)
+                .then(response => response.json())
+                .then(snippets => {
+                    const snippetsList = document.getElementById('snippetsList');
+                    snippetsList.innerHTML = '';
+                    snippets.forEach(snippet => {
+                        snippetsList.appendChild(createSnippetElement(snippet));
+                    });
+                });
+        }
+
+        // Event Listeners
+        document.getElementById('snippetForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                title: document.getElementById('title').value,
+                code: document.getElementById('code').value,
+                language: document.getElementById('language').value,
+                category: document.getElementById('category').value
+            };
+
+            try {
+                await fetch('/api/snippets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                // Reset form and reload snippets
+                e.target.reset();
+                loadSnippets();
+            } catch (error) {
+                console.error('Error saving snippet:', error);
+            }
+        });
+
+        // Search and Filter Event Listeners
+        const searchQuery = document.getElementById('searchQuery');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const languageFilter = document.getElementById('languageFilter');
+
+        [searchQuery, categoryFilter, languageFilter].forEach(element => {
+            element.addEventListener('input', () => {
+                loadSnippets(
+                    searchQuery.value,
+                    categoryFilter.value,
+                    languageFilter.value
+                );
+            });
+        });
+
+        // Initial load
+        loadSnippets();
+    </script>
+</body>
+</html>
